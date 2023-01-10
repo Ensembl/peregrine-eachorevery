@@ -1,0 +1,21 @@
+[
+    [
+        "different lengths",
+        ["!"],[],
+        {
+            "?a": [1,2,3],
+            "?b": [1,2],
+            "!": ["?a","?b"]
+        },
+        "bindings of differing length"
+    ],
+    [
+        "unset",
+        ["!a"],[],
+        {
+            "?a": [1,2,3],
+            "!a": 4
+        },
+        "no variables specified"
+    ]
+]

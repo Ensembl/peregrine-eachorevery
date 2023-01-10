@@ -1,0 +1,29 @@
+[
+    [
+        [
+            { "one": true, "two": 42, "three": { "hello": ["world"] } },
+            ["mars"]
+        ],
+        [
+            [[],[{ "one": true, "two": 42, "three": { "hello": ["world"] } },["mars"]]],
+            [["0","one"],true],
+            [["0","two"],42],
+            [["0","three"],{"hello": ["world"]}],
+            [["0","three","hello"],["world"]],
+            [["0","three","hello","0"],"world"]
+        ],
+        [
+            ["x"],
+            ["2"],
+            ["0","foo"],
+            ["0","three",""]
+        ],
+        [
+            true,
+            0,
+            ["x"],
+            {"four": "four" },
+            {"five": [5,"five"] }
+        ]
+    ]
+]

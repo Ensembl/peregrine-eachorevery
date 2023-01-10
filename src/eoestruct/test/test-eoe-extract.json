@@ -1,0 +1,130 @@
+[
+    [
+        "condition extract outer",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","2"],
+        "Q[a=<false,false,true,true,false>] (3.0 )"
+    ],
+    [
+        "condition extract inner",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","2","&"],
+        "3.0"
+    ],
+    [
+        "extract root",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        [],
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )"
+    ],
+    [
+        "extract array",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*"],
+        "[1.0,a=<1.0,2.0,3.0,4.0,5.0>,Q[b=<false,false,true,true,false>] (3.0 )]"
+    ],
+    [
+        "extract var",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","1"],
+        "a=<1.0,2.0,3.0,4.0,5.0>"
+    ],
+    [
+        "extract obj",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": {
+                "one": 1,
+                "two": "?a",
+                "three": { "&a": 3 }
+            }
+        },
+        "Aab.( {\"one\": 1.0,\"three\": Q[a=<false,false,true,true,false>] (3.0 ),\"two\": b=<1.0,2.0,3.0,4.0,5.0>} )",
+        ["*","two"],
+        "a=<1.0,2.0,3.0,4.0,5.0>"
+    ],
+    [
+        "extract_value var",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","1"],
+        [1,2,3,4,5]
+    ],
+    [
+        "extract_value condition",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","2"],
+        [false,false,true,true,false]
+    ]
+]

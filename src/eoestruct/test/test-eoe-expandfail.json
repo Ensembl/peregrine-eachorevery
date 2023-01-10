@@ -1,0 +1,19 @@
+[
+    [
+        "expand compatibility fail",
+        ["!"],[],
+        [
+            1, 2,
+            {
+                "?a": null,
+                "?b": [1,2,3],
+                "!": ["?a","?b",30]
+            }
+        ],
+        "[1.0,2.0,Aab.( [a=?,b=<1.0,2.0,3.0>,30.0] )]",
+        "late variables incompatible with earlies",
+        {
+            "?a": [10,11]
+        }
+    ]
+]

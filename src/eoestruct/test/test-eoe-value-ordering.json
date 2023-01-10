@@ -1,0 +1,54 @@
+[
+    [
+        "numbers sort",
+        [3,2,1,4,5,9,-1,-3,0.000001,10000001],
+        [-3,-1,0.000001,1,2,3,4,5,9,10000001]
+    ],
+    [
+        "booleans sort",
+        [true,false],
+        [false,true]
+    ],
+    [
+        "strings sort",
+        ["","zoo","aardvark","anteater","anchovy","ball","a"],
+        ["","a","aardvark","anchovy","anteater","ball","zoo"]
+    ],
+    [
+        "consts sort",
+        [true,"hello",null,42],
+        [null,true,42,"hello"]
+    ],
+    [
+        "items sort (top level)",
+        [{"true": true},true,[true]],
+        [true,[true],{"true": true}]
+    ],
+    [
+        "object keys are lexographic",
+        [{"a": 2},{"zoo": 4},{"": 1},{"aarvark": 3}],
+        [{"": 1},{"a": 2},{"aarvark": 3},{"zoo": 4}]
+    ],
+    [
+        "objects consider values",
+        [{"": 2},{"zoo": 4},{"": 1},{"": 3}],
+        [{"": 1},{"": 2},{"": 3},{"zoo": 4}]
+    ],
+    [
+        "smoke",
+        [
+            [[true],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [null,{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [[false],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [[null],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}]
+        ],
+        [
+            [null,{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [[null],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [[false],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [[true],{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}],
+            [{"": 1},{"a": 2},{"aarvark": 3},{"aarvark": [0]}]
+        ]
+    ]
+]

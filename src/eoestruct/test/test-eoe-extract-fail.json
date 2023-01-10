@@ -1,0 +1,162 @@
+[
+    [
+        "extract bad array index 1",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","4"],
+        "bad path"
+    ],
+    [
+        "extract bad array index 2",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*",""],
+        "bad path"
+    ],
+    [
+        "extract bad array index 1",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","x"],
+        "bad path"
+    ],
+    [
+        "extract bad all",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["0"],
+        "bad path"
+    ],
+    [
+        "extract bad condition",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","3","9"],
+        "bad path"
+    ],
+    [
+        "extract bad object",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": {
+                "one": 1,
+                "two": "?a",
+                "three": { "&a": 3 }
+            }
+        },
+        "Aab.( {\"one\": 1.0,\"three\": Q[a=<false,false,true,true,false>] (3.0 ),\"two\": b=<1.0,2.0,3.0,4.0,5.0>} )",
+        ["*","3","four"],
+        "bad path"
+    ],
+    [
+        "extract_value all",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        [],
+        ["bad path"]
+    ],
+    [
+        "extract_value constant",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*","0"],
+        ["bad path"]
+    ],
+    [
+        "extract_value array",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": [
+                1,
+                "?a",
+                { "&a": 3 }
+            ]
+        },
+        "Aab.( [1.0,b=<1.0,2.0,3.0,4.0,5.0>,Q[a=<false,false,true,true,false>] (3.0 )] )",
+        ["*"],
+        ["bad path"]
+    ],
+    [
+        "extract_value object",
+        ["!a"],["&a"],
+        {
+            "?a": [1,2,3,4,5],
+            "&a": [false,false,true,true,false],
+            "!a": {
+                "one": 1,
+                "two": "?a",
+                "three": { "&a": 3 }
+            }
+        },
+        "Aab.( {\"one\": 1.0,\"three\": Q[a=<false,false,true,true,false>] (3.0 ),\"two\": b=<1.0,2.0,3.0,4.0,5.0>} )",
+        ["*"],
+        ["bad path"]
+    ]
+]

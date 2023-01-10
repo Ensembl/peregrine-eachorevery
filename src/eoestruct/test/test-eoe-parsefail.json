@@ -1,0 +1,21 @@
+[
+    [
+        "different types",
+        ["!"],[],
+        {
+            "?a": [1,true,false],
+            "?b": [1,2,3],
+            "!": ["?a","?b"]
+        },
+        "non-homogenous variable"
+    ],
+    [
+        "odd variable",
+        ["!a"],[],
+        {
+            "?a": [[]],
+            "!a": 4
+        },
+        "var in json of unknown type"
+    ]
+]

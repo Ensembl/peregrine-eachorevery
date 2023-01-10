@@ -1,0 +1,12 @@
+[package]
+name = "eachorevery"
+version = "0.0.0"
+authors = ["ensembl-webteam@ebi.ac.uk"]
+edition = "2018"
+
+[dependencies]
+hashbrown="*"
+serde="*"
+serde_json="*"
+ordered-float="*"
+lazy_static="*"
