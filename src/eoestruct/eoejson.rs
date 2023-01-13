@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use crate::eachorevery::EachOrEvery;
-use super::{eoestruct::{StructConst, StructError, struct_error, StructVarGroup, LateValues, StructResult}, structtemplate::{StructVar, StructPair}, StructTemplate, eoestructdata::{DataStackTransformer, eoestack_run}, structbuilt::StructBuilt, expand::StructSelectorVisitor};
+use super::{eoestruct::{StructConst, struct_error, StructVarGroup, LateValues }, structtemplate::{StructVar, StructPair}, StructTemplate, eoestructdata::{DataStackTransformer, eoestack_run}, structbuilt::StructBuilt, expand::StructSelectorVisitor};
 use serde_json::{Value as JsonValue, Number, Map};
 
 struct JsonTransformer;
@@ -24,17 +24,17 @@ impl DataStackTransformer<StructConst,JsonValue> for JsonTransformer {
     }
 }
 
-pub fn struct_to_json(input: &StructBuilt, lates: Option<&LateValues>) -> Result<JsonValue,StructError> {
+pub fn struct_to_json(input: &StructBuilt, lates: Option<&LateValues>) -> Result<JsonValue,String> {
     eoestack_run(input,lates,JsonTransformer)
 }
 
-fn to_var_type<F,G,X>(input: &[JsonValue], cb: F, cb2: G) -> Result<StructVar,StructError>
+fn to_var_type<F,G,X>(input: &[JsonValue], cb: F, cb2: G) -> Result<StructVar,String>
         where F: Fn(&JsonValue) -> Option<X>, G: FnOnce(EachOrEvery<X>) -> StructVar {
     let values = input.iter().map(cb).collect::<Option<Vec<_>>>();
     Ok(cb2(values.map(|x| EachOrEvery::each(x)).ok_or(struct_error("non-homogenous variable"))?))
 }
 
-pub(super) fn array_to_var(group: &mut StructVarGroup, values: &[JsonValue]) -> Result<StructVar,StructError> {
+pub(super) fn array_to_var(group: &mut StructVarGroup, values: &[JsonValue]) -> Result<StructVar,String> {
     if let Some(first) = values.first() {
         match first {
             JsonValue::Bool(_) => {
@@ -74,7 +74,7 @@ struct EoeFromJson {
 }
 
 impl EoeFromJson {
-    fn new(mut specs: Vec<String>, mut ifs: Vec<String>, json: &JsonValue) ->  Result<(StructTemplate,Vec<(String,StructVar)>),StructError> {
+    fn new(mut specs: Vec<String>, mut ifs: Vec<String>, json: &JsonValue) ->  Result<(StructTemplate,Vec<(String,StructVar)>),String> {
         let mut obj = EoeFromJson{
             specs: specs.drain(..).collect(),
             ifs: ifs.drain(..).collect(),
@@ -85,7 +85,7 @@ impl EoeFromJson {
         Ok((template,obj.lates))
     }
 
-    fn to_var(&mut self, group: &mut StructVarGroup, key: &str, input: &JsonValue) -> Result<StructVar,StructError> {
+    fn to_var(&mut self, group: &mut StructVarGroup, key: &str, input: &JsonValue) -> Result<StructVar,String> {
         let values = match input {
             JsonValue::Array(x) => x.as_slice(),
             JsonValue::Null => {
@@ -98,7 +98,7 @@ impl EoeFromJson {
         array_to_var(group,values)
     }
     
-    fn to_all(&mut self, map: &Map<String,JsonValue>) -> Result<Option<StructTemplate>,StructError> {
+    fn to_all(&mut self, map: &Map<String,JsonValue>) -> Result<Option<StructTemplate>,String> {
         let mut group = StructVarGroup::new();
         let mut expr = None;
         for key in map.keys() {
@@ -119,7 +119,7 @@ impl EoeFromJson {
         Ok(Some(StructTemplate::new_all(&mut group,expr)))
     }
 
-    fn to_condition(&mut self, map: &Map<String,JsonValue>) -> Result<Option<StructTemplate>,StructError> {
+    fn to_condition(&mut self, map: &Map<String,JsonValue>) -> Result<Option<StructTemplate>,String> {
         let mut expr = None;
         for key in map.keys() {
             if self.ifs.contains(key) { expr = Some(key); break; }
@@ -134,7 +134,7 @@ impl EoeFromJson {
         Ok(None)
     }
 
-    fn build(&mut self, json: &JsonValue) ->  Result<StructTemplate,StructError> {
+    fn build(&mut self, json: &JsonValue) ->  Result<StructTemplate,String> {
         Ok(match json {
             JsonValue::Null => StructTemplate::new_null(),
             JsonValue::Bool(x) => StructTemplate::new_boolean(x.clone()),
@@ -158,7 +158,7 @@ impl EoeFromJson {
                     cond
                 } else {
                     StructTemplate::new_object(x.iter().map(|(k,v)|{
-                        Ok::<StructPair,StructError>(StructPair(k.to_string(),self.build(v)?))
+                        Ok::<StructPair,String>(StructPair(k.to_string(),self.build(v)?))
                     }).collect::<Result<_,_>>()?)
                 }
             }
@@ -166,7 +166,7 @@ impl EoeFromJson {
     }
 }
 
-pub fn struct_from_json(alls: Vec<String>, ifs: Vec<String>, json: &JsonValue) -> Result<(StructTemplate,Vec<(String,StructVar)>),StructError> {
+pub fn struct_from_json(alls: Vec<String>, ifs: Vec<String>, json: &JsonValue) -> Result<(StructTemplate,Vec<(String,StructVar)>),String> {
     EoeFromJson::new(alls,ifs,json)
 }
 
@@ -175,7 +175,7 @@ struct SelectJsonArray {
 }
 
 impl StructSelectorVisitor for SelectJsonArray {
-    fn constant(&mut self, constant: &StructConst) -> StructResult {
+    fn constant(&mut self, constant: &StructConst) -> Result<(),String> {
         let value = match constant {
             StructConst::Number(n) => { JsonValue::Number(Number::from_f64(*n).unwrap()) }
             StructConst::String(s) => { JsonValue::String(s.clone()) }
@@ -186,13 +186,13 @@ impl StructSelectorVisitor for SelectJsonArray {
         Ok(())
     }
 
-    fn missing(&mut self) -> StructResult {
+    fn missing(&mut self) -> Result<(),String> {
         self.output.push(JsonValue::Null);
         Ok(())
     }
 }
 
-pub fn select_to_json(data: &StructBuilt, path: &[String], lates: Option<&LateValues>) -> Result<JsonValue,StructError> {
+pub fn select_to_json(data: &StructBuilt, path: &[String], lates: Option<&LateValues>) -> Result<JsonValue,String> {
     let mut out = SelectJsonArray { output: vec![] };
     data.select(lates,path,&mut out)?;
     Ok(JsonValue::Array(out.output))

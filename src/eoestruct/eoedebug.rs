@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use super::{eoestruct::{StructResult, StructError, StructConst, StructValueId}, StructTemplate, structbuilt::StructBuilt};
+use super::{eoestruct::{StructConst, StructValueId}, StructTemplate, structbuilt::StructBuilt};
 
-
-#[cfg(debug_assertions)]
-pub(super) fn comma_separate<'a,F,Y>(input: &[Y], mut cb: F, output: &mut String) -> StructResult
-        where F: FnMut(&Y,&mut String) -> StructResult {
+pub(super) fn comma_separate<'a,F,Y>(input: &[Y], mut cb: F, output: &mut String) -> Result<(),String>
+        where F: FnMut(&Y,&mut String) -> Result<(),String> {
     let mut first = true;
     for item in input {
         if !first { output.push_str(","); }
@@ -14,12 +12,10 @@ pub(super) fn comma_separate<'a,F,Y>(input: &[Y], mut cb: F, output: &mut String
     Ok(())
 }
 
-#[cfg(debug_assertions)]
 struct TemplateVarsFormatter {
     name: HashMap<StructValueId,usize>
 }
 
-#[cfg(debug_assertions)]
 impl TemplateVarsFormatter {
     pub(super) fn new() -> TemplateVarsFormatter {
         TemplateVarsFormatter {
@@ -46,16 +42,14 @@ impl std::fmt::Debug for StructTemplate {
 }
 
 impl StructTemplate {
-    #[cfg(debug_assertions)]
-    pub(super) fn format(&self) -> Result<String,StructError> {
+    pub(super) fn format(&self) -> Result<String,String> {
         let mut output = String::new();
         let mut formatter = TemplateVarsFormatter::new();
         self.format_level(&mut formatter, &mut output)?;
         Ok(output)
     }
 
-    #[cfg(debug_assertions)]
-    fn format_level(&self, formatter: &mut TemplateVarsFormatter, output: &mut String) -> StructResult {
+    fn format_level(&self, formatter: &mut TemplateVarsFormatter, output: &mut String) -> Result<(),String> {
         match self {
             StructTemplate::Var(var) => {
                 output.push_str(&format!("{}={:?}",formatter.get(&var.id),var.value));
@@ -98,7 +92,6 @@ impl StructTemplate {
     }    
 }
 
-#[cfg(debug_assertions)]
 impl std::fmt::Debug for StructBuilt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let out = self.format().ok().unwrap_or_else(|| "*unprintable*".to_string());
@@ -107,13 +100,13 @@ impl std::fmt::Debug for StructBuilt {
 }
 
 impl StructBuilt {
-    pub(super) fn format(&self) -> Result<String,StructError> {
+    pub(super) fn format(&self) -> Result<String,String> {
         let mut output = String::new();
         self.format_level(&mut output)?;
         Ok(output)
     }
 
-    pub(super) fn format_level(&self, output: &mut String) -> StructResult {
+    pub(super) fn format_level(&self, output: &mut String) -> Result<(),String> {
         match self {
             StructBuilt::Var(depth,width) => {
                 output.push_str(&format!("D({},{})",depth,width));

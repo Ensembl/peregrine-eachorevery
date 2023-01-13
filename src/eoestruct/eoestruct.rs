@@ -1,4 +1,4 @@
-use crate::{eachorevery::{EachOrEvery, EachOrEveryGroupCompatible}, approxnumber::ApproxNumber};
+use crate::{eachorevery::{EachOrEvery, EachOrEveryGroupCompatible}, approxnumber::ApproxNumber, EachOrEveryFilter};
 use hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
@@ -10,25 +10,11 @@ lazy_static! {
     static ref IDS : Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 }    
 
-#[cfg(debug_assertions)]
-pub type StructError = String;
+#[cfg(any(debug_assertions,test))]
+pub fn struct_error(error: &str) -> String { error.to_string() }
 
-#[cfg(debug_assertions)]
-pub(super) fn struct_error(msg: &str) -> StructError { msg.to_string() }
-
-#[cfg(debug_assertions)]
-pub fn struct_error_to_string(error: StructError) -> String { error }
-
-#[cfg(not(debug_assertions))]
-pub type StructError = ();
-
-#[cfg(not(debug_assertions))]
-pub(super) fn struct_error(msg: &str) -> StructError { () }
-
-pub type StructResult = Result<(),StructError>;
-
-#[cfg(not(debug_assertions))]
-pub fn struct_error_to_string(_error: StructError) ->String { "struct error".to_string() }
+#[cfg(not(any(debug_assertions,test)))]
+pub(super) fn struct_error(msg: &str) -> String { String::new() }
 
 #[derive(Copy,Clone,PartialEq,Eq,Hash)]
 #[cfg_attr(debug_assertions,derive(Debug))]
@@ -141,7 +127,7 @@ pub struct LateValues(HashMap<StructValueId,StructVarValue>);
 impl LateValues {
     pub fn new() -> LateValues { LateValues(HashMap::new()) }
 
-    pub fn add(&mut self, var: &StructVar, val: &StructVar) -> StructResult {
+    pub fn add(&mut self, var: &StructVar, val: &StructVar) -> Result<(),String> {
         let id = match &var.value {
             StructVarValue::Late(id) => id.clone(),
             _ => { return Err(struct_error("can only bind to late variables")) }
@@ -229,7 +215,7 @@ impl StructVarValue {
         }
     }
 
-    fn resolve<'a>(&'a self, lates: Option<&'a LateValues>) -> Result<&StructVarValue,StructError> {
+    fn resolve<'a>(&'a self, lates: Option<&'a LateValues>) -> Result<&StructVarValue,String> {
         match self {
             StructVarValue::Late(id) => {
                 lates.and_then(|lates| lates.0.get(id))
@@ -240,7 +226,7 @@ impl StructVarValue {
         }
     }
 
-    pub(super) fn is_finite(&self, lates: Option<&LateValues>) -> Result<bool,StructError> {
+    pub(super) fn is_finite(&self, lates: Option<&LateValues>) -> Result<bool,String> {
         Ok(match self.resolve(lates)? {
             StructVarValue::Number(x) => x.len().is_some(),
             StructVarValue::String(x) => x.len().is_some(),
@@ -258,7 +244,7 @@ impl StructVarValue {
         };
     }
 
-    pub(super) fn check_compatible(&self, lates: Option<&LateValues>, compat: &mut EachOrEveryGroupCompatible) -> StructResult {
+    pub(super) fn check_compatible(&self, lates: Option<&LateValues>, compat: &mut EachOrEveryGroupCompatible) -> Result<(),String> {
         match self.resolve(lates)? {
             StructVarValue::Number(input) => { compat.add(input); },
             StructVarValue::String(input) => { compat.add(input); },
@@ -268,7 +254,7 @@ impl StructVarValue {
         Ok(())
     }
 
-    pub(super) fn get<'a>(&'a self, lates: Option<&LateValues>, index: usize) -> Result<StructConst,StructError> {
+    pub(super) fn get<'a>(&'a self, lates: Option<&LateValues>, index: usize) -> Result<StructConst,String> {
        Ok(match self.resolve(lates)? {
             StructVarValue::Number(input) => {
                 StructConst::Number(*input.get(index).unwrap())
@@ -283,7 +269,7 @@ impl StructVarValue {
         })
     }
 
-    pub(super) fn exists<'a>(&'a self, lates: Option<&LateValues>, index: usize) -> Result<bool,StructError> {
+    pub(super) fn exists<'a>(&'a self, lates: Option<&LateValues>, index: usize) -> Result<bool,String> {
         Ok(match self.resolve(lates)? {
             StructVarValue::Number(input) => {
                 input.get(index).is_some()
@@ -296,5 +282,14 @@ impl StructVarValue {
             },
             StructVarValue::Late(_) => panic!("invariant error: late after resolve()")
         })
+    }
+
+    pub(super) fn filter(&self, filter: &EachOrEveryFilter) -> StructVarValue {
+        match self {
+            StructVarValue::Number(n) => StructVarValue::Number(n.filter(filter)),
+            StructVarValue::String(s) => StructVarValue::String(s.filter(filter)),
+            StructVarValue::Boolean(b) => StructVarValue::Boolean(b.filter(filter)),
+            StructVarValue::Late(x) => StructVarValue::Late(x.clone())
+        }
     }
 }

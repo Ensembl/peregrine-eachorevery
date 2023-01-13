@@ -16,11 +16,11 @@ pub mod eoestruct {
     mod structtemplate; 
     mod structvalue;
 
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions,test))]
     mod eoedebug;
     
     pub use expand::{ struct_select };
-    pub use eoestruct::{ StructVarGroup, StructConst, StructError, struct_error_to_string };
+    pub use eoestruct::{ StructVarGroup, StructConst };
     pub use eoejson::{ struct_to_json, struct_from_json, select_to_json };
     pub use structbuilt::{ StructBuilt };
     pub use structtemplate::{ StructTemplate, StructVar, StructPair };

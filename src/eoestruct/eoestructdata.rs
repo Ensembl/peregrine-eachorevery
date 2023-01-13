@@ -1,14 +1,14 @@
-use super::{eoestruct::{StructConst, StructResult, StructError, LateValues}, structbuilt::StructBuilt };
+use super::{eoestruct::{StructConst, LateValues}, structbuilt::StructBuilt };
 
 pub trait DataVisitor {
-    fn visit_const(&mut self, _input: &StructConst) -> StructResult { Ok(()) }
-    fn visit_separator(&mut self) -> StructResult { Ok(()) }
-    fn visit_array_start(&mut self) -> StructResult { Ok(()) }
-    fn visit_array_end(&mut self) -> StructResult { Ok(()) }
-    fn visit_object_start(&mut self) -> StructResult { Ok(()) }
-    fn visit_object_end(&mut self) -> StructResult { Ok(()) }
-    fn visit_pair_start(&mut self, _key: &str) -> StructResult { Ok(()) }
-    fn visit_pair_end(&mut self, _key: &str) -> StructResult { Ok(()) }
+    fn visit_const(&mut self, _input: &StructConst) -> Result<(),String> { Ok(()) }
+    fn visit_separator(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_array_start(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_array_end(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_object_start(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_object_end(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_pair_start(&mut self, _key: &str) -> Result<(),String> { Ok(()) }
+    fn visit_pair_end(&mut self, _key: &str) -> Result<(),String> { Ok(()) }
 }
 
 pub trait DataStackTransformer<T,X> {
@@ -73,13 +73,13 @@ impl<T,X> DataStack<T,X> {
         }
     }
 
-    fn add_atom(&mut self, item: T) -> StructResult {
+    fn add_atom(&mut self, item: T) -> Result<(),String> {
         let item = self.transformer.make_singleton(item);
         self.add(item);
         Ok(())
     }
 
-    fn pop<F>(&mut self, cb: F) -> StructResult where F: FnOnce(X) -> Result<X,StructError> {
+    fn pop<F>(&mut self, cb: F) -> Result<(),String> where F: FnOnce(X) -> Result<X,String> {
         match self.stack.pop().expect("struct invariant violated: build stack musused and underflowed") {
             DataStackEntry::Array(entries) => {
                 let item = cb(self.transformer.make_array(entries))?;
@@ -98,17 +98,17 @@ impl<T,X> DataStack<T,X> {
 }
 
 impl<X> DataVisitor for DataStack<StructConst,X> {
-    fn visit_const(&mut self, input: &StructConst) -> StructResult { self.add_atom(input.clone()) }
-    fn visit_separator(&mut self) -> StructResult { Ok(()) }
-    fn visit_array_start(&mut self) -> StructResult { self.push_array(); Ok(()) }
-    fn visit_array_end(&mut self) -> StructResult { self.pop(|x| Ok(x)) }
-    fn visit_object_start(&mut self) -> StructResult { self.push_object(); Ok(()) }
-    fn visit_object_end(&mut self) -> StructResult { self.pop(|x| Ok(x)) }
-    fn visit_pair_start(&mut self, key: &str) -> StructResult { self.push_key(key); Ok(()) }
-    fn visit_pair_end(&mut self, _key: &str) -> StructResult { Ok(()) }
+    fn visit_const(&mut self, input: &StructConst) -> Result<(),String> { self.add_atom(input.clone()) }
+    fn visit_separator(&mut self) -> Result<(),String> { Ok(()) }
+    fn visit_array_start(&mut self) -> Result<(),String> { self.push_array(); Ok(()) }
+    fn visit_array_end(&mut self) -> Result<(),String> { self.pop(|x| Ok(x)) }
+    fn visit_object_start(&mut self) -> Result<(),String> { self.push_object(); Ok(()) }
+    fn visit_object_end(&mut self) -> Result<(),String> { self.pop(|x| Ok(x)) }
+    fn visit_pair_start(&mut self, key: &str) -> Result<(),String> { self.push_key(key); Ok(()) }
+    fn visit_pair_end(&mut self, _key: &str) -> Result<(),String> { Ok(()) }
 }
 
-pub fn eoestack_run<F,X>(input: &StructBuilt, lates: Option<&LateValues>, transformer: F) -> Result<X,StructError> where F: DataStackTransformer<StructConst,X> + 'static {
+pub fn eoestack_run<F,X>(input: &StructBuilt, lates: Option<&LateValues>, transformer: F) -> Result<X,String> where F: DataStackTransformer<StructConst,X> + 'static {
     let mut stack = DataStack::new(transformer);
     input.expand(lates,&mut stack)?;
     Ok(stack.get())

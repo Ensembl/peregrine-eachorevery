@@ -1,4 +1,4 @@
-use super::{eoestructdata::DataVisitor, eoestruct::{StructConst, StructResult, struct_error}, StructBuilt, StructValue};
+use super::{eoestructdata::DataVisitor, eoestruct::{StructConst, struct_error}, StructBuilt, StructValue};
 
 /* Falsy values are:
  * false, 0, "", [], {}, null
@@ -16,7 +16,7 @@ struct ProveFalsy {
 }
 
 impl ProveFalsy {
-    fn once(&mut self) -> StructResult {
+    fn once(&mut self) -> Result<(),String> {
         if self.once { return Err(struct_error("")) }
         self.once = true;
         Ok(())
@@ -24,7 +24,7 @@ impl ProveFalsy {
 }
 
 impl DataVisitor for ProveFalsy {
-    fn visit_const(&mut self, input: &StructConst) -> StructResult { 
+    fn visit_const(&mut self, input: &StructConst) -> Result<(),String> { 
         self.once()?;
         let truthy = match input {
             StructConst::Number(n) => *n != 0.,
@@ -34,9 +34,9 @@ impl DataVisitor for ProveFalsy {
         };
         if truthy { Err(struct_error("")) } else { Ok(()) }
     }
-    fn visit_array_start(&mut self) -> StructResult { self.once() }
-    fn visit_object_start(&mut self) -> StructResult { self.once() }
-    fn visit_pair_start(&mut self, _key: &str) -> StructResult { Err(struct_error("")) }
+    fn visit_array_start(&mut self) -> Result<(),String> { self.once() }
+    fn visit_object_start(&mut self) -> Result<(),String> { self.once() }
+    fn visit_pair_start(&mut self, _key: &str) -> Result<(),String> { Err(struct_error("")) }
 }
 
 pub(super) fn truthy(input: &StructBuilt) -> bool {

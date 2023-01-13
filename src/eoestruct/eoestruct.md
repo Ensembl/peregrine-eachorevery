@@ -277,7 +277,7 @@ Building templates programatically can be painful, so the library a way of speci
 
 Building templates uses `struct_from_json` which takes a list of "all" strings, a list of "if" strings, and a JSON template. The "all" and "if" strings are strings with special meaning in the template, and the list could come from the same source as the template or be hardwired in the call, as appropriate for the use case.
 
-Every type in the supplied json template is copied across verbatim to the `StructTemplate` generated except for objects and strings, and even objects and strings are copied across verbatim *unless* they meet certainconditions:
+Every type in the supplied json template is copied across verbatim to the `StructTemplate` generated except for objects and strings, and even objects and strings are copied across verbatim *unless* they meet certain conditions:
 * Objects are only special if they conatain a key in the "all" or "if" list supplied. 
 * Strings are only special if the match a variable name established in an All (see below)
 
@@ -360,6 +360,8 @@ You can also replace the EoE value used in a `Var` or a `Condition` using the me
 ```
 
 Note that the group of the replacement is ignored, only the value is copied, using the group of the old `Var` or `Condition`node; indeed, this is the value of this method. If you try to use `replace()` with free variables they will be of the wrong group and so the template won't build, so use `substitute()` instead.
+
+`set_index`, when passed a path pointing to an all and an index, will create another data `StructTemplate`, but with just the single value at that index. You might have a large data structure, iterating over, say 100 genes, and convert it to a template just for the gene at index 72, say. `set_index` allows you to do that.
 
 It may seem a litte mysterious as to why you would want to do any of this. Note, however that `StructBuilt`s are immutable objects and are often used for storing arbitrary json-modelled values. If you *do* want to modify them, you can convert them *back* to a `StructTemplate`, replace somde contents and then rebuild. You "unbuild" with this method.
 

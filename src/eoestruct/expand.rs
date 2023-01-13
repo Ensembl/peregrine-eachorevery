@@ -1,14 +1,14 @@
 use std::sync::Arc;
 use crate::eachorevery::{EachOrEveryGroupCompatible};
-use super::{eoestruct::{StructConst, StructVarValue, StructResult, struct_error, StructError, LateValues}, eoestructdata::DataVisitor, structbuilt::StructBuilt, structvalue::StructValue};
+use super::{eoestruct::{StructConst, StructVarValue, struct_error, LateValues, StructValueId}, eoestructdata::DataVisitor, structbuilt::StructBuilt, structvalue::StructValue};
 
 pub trait StructSelectorVisitor {
-    fn constant(&mut self, constant: &StructConst) -> StructResult;
-    fn missing(&mut self) -> StructResult;
+    fn constant(&mut self, constant: &StructConst) -> Result<(),String>;
+    fn missing(&mut self) -> Result<(),String>;
 }
 
-fn separate<'a,F,Y>(input: &mut dyn Iterator<Item=Y>, mut cb: F, visitor: &mut dyn DataVisitor) -> StructResult
-        where F: FnMut(Y,&mut dyn DataVisitor) -> StructResult {
+fn separate<'a,F,Y>(input: &mut dyn Iterator<Item=Y>, mut cb: F, visitor: &mut dyn DataVisitor) -> Result<(),String>
+        where F: FnMut(Y,&mut dyn DataVisitor) -> Result<(),String> {
     let mut first = true;
     for item in input {
         if !first { visitor.visit_separator()?; }
@@ -29,7 +29,7 @@ struct GlobalState<'a> {
     alls: Vec<AllState>
 }
 
-fn check_compatible(vars: &[Option<Arc<StructVarValue>>], lates: Option<&LateValues>) -> StructResult {
+fn check_compatible(vars: &[Option<Arc<StructVarValue>>], lates: Option<&LateValues>) -> Result<(),String> {
     let mut compat = EachOrEveryGroupCompatible::new(None);
     for item in vars.iter().filter_map(|x| x.as_deref()) {
         item.check_compatible(lates, &mut compat)?;
@@ -41,7 +41,7 @@ fn check_compatible(vars: &[Option<Arc<StructVarValue>>], lates: Option<&LateVal
 }
 
 impl AllState {
-    fn new(vars: Vec<Option<Arc<StructVarValue>>>, lates: Option<&LateValues>,next_index: usize) -> Result<AllState,StructError> {
+    fn new(vars: Vec<Option<Arc<StructVarValue>>>, lates: Option<&LateValues>,next_index: usize) -> Result<AllState,String> {
         check_compatible(&vars,lates)?;
         let first = vars.iter().position(|x| 
             x.as_ref().map(|x| x.is_finite(lates).ok().unwrap_or(false)).unwrap_or(false)
@@ -49,18 +49,18 @@ impl AllState {
         Ok(AllState { vars, next_index, first })
     }
 
-    fn get(&self, lates: Option<&LateValues>, width: usize) -> Result<StructConst,StructError> {
+    fn get(&self, lates: Option<&LateValues>, width: usize) -> Result<StructConst,String> {
         self.vars[width].as_ref().unwrap().get(lates,self.next_index-1)
     }
 
-    fn row(&mut self, lates: Option<&LateValues>) -> Result<bool,StructError> {
+    fn row(&mut self, lates: Option<&LateValues>) -> Result<bool,String> {
         self.next_index += 1;
         self.vars[self.first].as_ref().unwrap().exists(lates,self.next_index-1)
     }
 }
 
 impl StructBuilt {
-    fn split(&self, output: &mut dyn DataVisitor, data: &mut GlobalState) -> StructResult {
+    fn split(&self, output: &mut dyn DataVisitor, data: &mut GlobalState) -> Result<(),String> {
         match self {
             StructBuilt::Var(depth,width) => {
                 output.visit_const(&data.alls[*depth].get(data.lates,*width)?)?;
@@ -108,11 +108,11 @@ impl StructBuilt {
         Ok(())
     }
 
-    pub fn expand(&self, lates: Option<&LateValues>, output: &mut dyn DataVisitor) -> StructResult {
+    pub fn expand(&self, lates: Option<&LateValues>, output: &mut dyn DataVisitor) -> Result<(),String> {
         self.split(output,&mut GlobalState { alls: vec![], lates })
     }
 
-    fn is_present(&self, data: &mut GlobalState) -> Result<bool,StructError> {
+    fn is_present(&self, data: &mut GlobalState) -> Result<bool,String> {
         Ok(match self {
             StructBuilt::Condition(depth,width,_expr) =>
                 data.alls[*depth].get(data.lates,*width)?.truthy(),
@@ -121,7 +121,7 @@ impl StructBuilt {
         })
     }
 
-    fn do_select(&self, visitor: &mut dyn StructSelectorVisitor, data: &mut GlobalState, path: &[String]) -> StructResult {
+    fn do_select(&self, visitor: &mut dyn StructSelectorVisitor, data: &mut GlobalState, path: &[String]) -> Result<(),String> {
         match self {
             StructBuilt::Var(depth,width) => {
                 if path.len() != 0 { visitor.missing()?; return Ok(()); }
@@ -212,13 +212,13 @@ impl StructBuilt {
         Ok(())
     }
 
-    pub fn select(&self, lates: Option<&LateValues>, path: &[String], visitor: &mut dyn StructSelectorVisitor) -> StructResult {
+    pub fn select(&self, lates: Option<&LateValues>, path: &[String], visitor: &mut dyn StructSelectorVisitor) -> Result<(),String> {
         self.do_select(visitor,&mut GlobalState { alls: vec![], lates },path)
     }
 }
 
 impl StructValue {
-    fn split(&self, output: &mut dyn DataVisitor, data: &mut GlobalState) -> StructResult {
+    fn split(&self, output: &mut dyn DataVisitor, data: &mut GlobalState) -> Result<(),String> {
         match self {
             StructValue::Const(value) => {
                 output.visit_const(value)?;
@@ -243,7 +243,7 @@ impl StructValue {
         Ok(())
     }
 
-    pub fn expand(&self, lates: Option<&LateValues>, output: &mut dyn DataVisitor) -> StructResult {
+    pub fn expand(&self, lates: Option<&LateValues>, output: &mut dyn DataVisitor) -> Result<(),String> {
         self.split(output,&mut GlobalState { alls: vec![], lates })
     }
 }
@@ -253,18 +253,18 @@ struct SelectJsonArray {
 }
 
 impl StructSelectorVisitor for SelectJsonArray {
-    fn constant(&mut self, constant: &StructConst) -> StructResult {
+    fn constant(&mut self, constant: &StructConst) -> Result<(),String> {
         self.output.push(Some(constant.clone()));
         Ok(())
     }
 
-    fn missing(&mut self) -> StructResult {
+    fn missing(&mut self) -> Result<(),String> {
         self.output.push(None);
         Ok(())
     }
 }
 
-pub fn struct_select(data: &StructBuilt, path: &[String], lates: Option<&LateValues>) -> Result<Vec<Option<StructConst>>,StructError> {
+pub fn struct_select(data: &StructBuilt, path: &[String], lates: Option<&LateValues>) -> Result<Vec<Option<StructConst>>,String> {
     let mut out = SelectJsonArray { output: vec![] };
     data.select(lates,path,&mut out)?;
     Ok(out.output)

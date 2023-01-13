@@ -1,6 +1,4 @@
-
 use std::sync::Arc;
-
 use super::eoestruct::{StructConst, StructVarValue};
 
 #[derive(Clone)]

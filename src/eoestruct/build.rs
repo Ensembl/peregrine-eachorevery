@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::eachorevery::{EachOrEveryGroupCompatible};
-use super::{eoestruct::{StructVarValue, StructValueId, StructResult, StructError, struct_error}, StructTemplate, structbuilt::StructBuilt, StructPair, StructVar, StructVarGroup};
+use super::{eoestruct::{StructVarValue, StructValueId, struct_error}, StructTemplate, structbuilt::StructBuilt, StructPair, StructVar, StructVarGroup};
 
 struct Binding {
     id: StructValueId,
@@ -14,7 +14,7 @@ impl Binding {
     }
 }
 
-fn check_build_compatible(vars: &[Option<Arc<StructVarValue>>]) -> StructResult {
+fn check_build_compatible(vars: &[Option<Arc<StructVarValue>>]) -> Result<(),String> {
     let vars = vars.iter().filter_map(|x| x.as_ref()).collect::<Vec<_>>();
     if vars.len() == 0 {
         return Err(struct_error("no variables specified"));
@@ -40,7 +40,7 @@ fn direct_conditionals(input: &[StructBuilt]) -> bool {
 }
 
 impl StructTemplate {
-    fn make(&self, bindings: &mut Vec<Binding>, all_depth: usize, first: bool) -> Result<StructBuilt,StructError> {
+    fn make(&self, bindings: &mut Vec<Binding>, all_depth: usize, first: bool) -> Result<StructBuilt,String> {
         Ok(match self {
             StructTemplate::Var(var) => {
                 let index = bindings.iter().position(|id| id.id == var.id);
@@ -57,7 +57,7 @@ impl StructTemplate {
             },
             StructTemplate::Object(v) => {
                 StructBuilt::Object(Arc::new(
-                    v.iter().map(|x| Ok::<_,StructError>((x.0.clone(),x.1.make(bindings,all_depth,false)?))).collect::<Result<Vec<_>,_>>()?
+                    v.iter().map(|x| Ok::<_,String>((x.0.clone(),x.1.make(bindings,all_depth,false)?))).collect::<Result<Vec<_>,_>>()?
                 ))
             },
             StructTemplate::All(ids, expr) => {
@@ -93,13 +93,13 @@ impl StructTemplate {
         })
     }
 
-    pub fn build(&self) -> Result<StructBuilt,StructError> {
+    pub fn build(&self) -> Result<StructBuilt,String> {
         self.make(&mut vec![],0,true)
     }
 }
 
 impl StructBuilt {
-    fn unmake(&self, vars: &mut Vec<Vec<Option<StructVar>>>) -> Result<StructTemplate,StructError> {
+    fn unmake(&self, vars: &mut Vec<Vec<Option<StructVar>>>) -> Result<StructTemplate,String> {
         Ok(match self {
             StructBuilt::Var(depth,index) => {
                 StructTemplate::Var(vars[*depth][*index].clone().unwrap())
@@ -113,7 +113,7 @@ impl StructBuilt {
             },
             StructBuilt::Object(p) => {
                 let pairs = p.as_ref().iter().map(|(k,b)| 
-                    Ok::<_,StructError>(StructPair(k.to_string(),b.unmake(vars)?))
+                    Ok::<_,String>(StructPair(k.to_string(),b.unmake(vars)?))
                 ).collect::<Result<Vec<_>,_>>()?;
                 StructTemplate::Object(Arc::new(pairs))
             },
@@ -136,7 +136,7 @@ impl StructBuilt {
         })
     }
 
-    pub fn unbuild(&self) -> Result<StructTemplate,StructError> {
+    pub fn unbuild(&self) -> Result<StructTemplate,String> {
         self.unmake(&mut vec![])
     }
 }

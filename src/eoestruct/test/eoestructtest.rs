@@ -3,7 +3,7 @@ use std::{str::FromStr, collections::hash_map::DefaultHasher, hash::{Hash, Hashe
 use crate::{eoestruct::{eoejson::{struct_to_json, struct_from_json, array_to_var, select_to_json }, structtemplate::{StructVar, StructPair}, StructTemplate, eoestructdata::{DataVisitor}, StructBuilt, structvalue::StructValue}, EachOrEvery};
 use serde_json::{Value as JsonValue, Number, Map as JsonMap };
 
-use super::super::eoestruct::{StructResult, StructConst, StructVarGroup, LateValues, StructVarValue };
+use super::super::eoestruct::{ StructConst, StructVarGroup, LateValues, StructVarValue };
 
 fn json_fix_numbers(json: &JsonValue) -> JsonValue {
     match json {
@@ -341,7 +341,7 @@ run_cases!(test_visitor,"test-visitor.json",visitor_case);
 run_cases!(test_select,"test-select.json",select_case);
 run_cases!(test_value_smoke,"test-eoe-value.json",run_value_cases);
 run_cases!(test_value_ordering_smoke,"test-eoe-value-ordering.json",run_value_sort_cases);
-
+run_cases!(test_top_replace,"test-eoe-top-replace.json",top_replace_case);
 
 #[test]
 fn test_eoestruct_free() {
@@ -465,14 +465,23 @@ fn test_missing_late() {
 struct TestVisitor(String);
 
 impl DataVisitor for TestVisitor {
-    fn visit_const(&mut self, _input: &StructConst) -> StructResult { self.0.push('c'); Ok(()) }
-    fn visit_separator(&mut self) -> StructResult { self.0.push(','); Ok(())}
-    fn visit_array_start(&mut self) -> StructResult { self.0.push('['); Ok(()) }
-    fn visit_array_end(&mut self) -> StructResult { self.0.push(']'); Ok(()) }
-    fn visit_object_start(&mut self) -> StructResult { self.0.push('{'); Ok(()) }
-    fn visit_object_end(&mut self) -> StructResult { self.0.push('}'); Ok(()) }
-    fn visit_pair_start(&mut self, key: &str) -> StructResult { self.0.push_str(&format!("<{}>",key)); Ok(()) }
-    fn visit_pair_end(&mut self, key: &str) -> StructResult { self.0.push_str(&format!("</{}>",key)); Ok(()) }
+    fn visit_const(&mut self, _input: &StructConst) -> Result<(),String> { self.0.push('c'); Ok(()) }
+    fn visit_separator(&mut self) -> Result<(),String> { self.0.push(','); Ok(())}
+    fn visit_array_start(&mut self) -> Result<(),String> { self.0.push('['); Ok(()) }
+    fn visit_array_end(&mut self) -> Result<(),String> { self.0.push(']'); Ok(()) }
+    fn visit_object_start(&mut self) -> Result<(),String> { self.0.push('{'); Ok(()) }
+    fn visit_object_end(&mut self) -> Result<(),String> { self.0.push('}'); Ok(()) }
+    fn visit_pair_start(&mut self, key: &str) -> Result<(),String> { self.0.push_str(&format!("<{}>",key)); Ok(()) }
+    fn visit_pair_end(&mut self, key: &str) -> Result<(),String> { self.0.push_str(&format!("</{}>",key)); Ok(()) }
+}
+
+fn top_replace_case(value: &JsonValue) {
+    let parts = json_array(value);
+    println!("ruuning {}\n",json_string(&parts[0]));
+    let (template,_) = build_json_123(&parts,3,None);
+    let new_template = template.set_index(&[],2).expect("set failed");
+    eprintln!("{:?}",new_template);
+    assert_eq!(json_string(&parts[4]),format!("{:?}",new_template));
 }
 
 fn visitor_case(value: &JsonValue) {
@@ -513,4 +522,3 @@ fn select_case(value: &JsonValue) {
         select_subcase(&build,&path,&values);
     }
 }
-

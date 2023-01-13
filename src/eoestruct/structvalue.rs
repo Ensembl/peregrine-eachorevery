@@ -1,6 +1,6 @@
 use std::{sync::Arc, fmt, collections::BTreeMap, cmp::Ordering, hash::Hash };
 use serde::{de::{Visitor, MapAccess}, Deserialize, Deserializer, Serialize, ser::{SerializeSeq, SerializeMap}};
-use super::{StructConst, eoestructdata::{DataStackTransformer, eoestack_run}, StructBuilt, eoestruct::{LateValues}, StructError };
+use super::{StructConst, eoestructdata::{DataStackTransformer, eoestack_run}, StructBuilt, eoestruct::{LateValues} };
 use serde_json::{Value as JsonValue, Number};
 
 #[cfg_attr(debug_assertions,derive(Debug))]
@@ -74,7 +74,7 @@ impl StructValue {
         Self::Object(Arc::new(input.drain(..).collect()))
     }
 
-    pub fn new_expand(input: &StructBuilt, lates: Option<&LateValues>) -> Result<StructValue,StructError> {
+    pub fn new_expand(input: &StructBuilt, lates: Option<&LateValues>) -> Result<StructValue,String> {
         eoestack_run(input,lates,ValueTransformer)
     }
 
