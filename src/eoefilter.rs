@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use super::{EachOrEvery, eachorevery::EachOrEveryIndex};
 
 fn un_rle<F>(input: &[(usize,usize)], cb: F) -> Arc<Vec<usize>> where F: Fn(usize) -> usize {
@@ -49,6 +48,7 @@ impl<'a> NumIterator<'a> {
 
 
 // XXX run-length
+#[cfg_attr(debug_assertions,derive(Debug))]
 pub struct EachOrEveryFilterBuilder(Vec<(usize,usize)>,usize);
 
 impl EachOrEveryFilterBuilder {

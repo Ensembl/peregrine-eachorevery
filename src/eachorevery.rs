@@ -90,7 +90,7 @@ impl<X> EachOrEvery<X> {
             EachOrEveryIndex::Unindexed => {
                 let (mut out,mapped_dest) = self.unsquash(cb);
                 for (i,value) in mapped_dest.iter().enumerate() {
-                    out[mapped_dest[*value]].1.set(i);
+                    out[*value].1.set(i);
                 }
                 out.drain(..).map(|(key,filter)| (key,filter.make(len))).collect::<Vec<_>>()
             },
