@@ -117,7 +117,7 @@ impl<X> EachOrEvery<X> {
         }
     }
     
-    pub fn map_mut<F>(&mut self, f: F) where F: Fn(&X) -> X {
+    pub fn map_mut<F>(&mut self, f: F) where F: FnMut(&X) -> X {
         self.data = Arc::new(self.data.iter().map(f).collect::<Vec<_>>());
     }
 
